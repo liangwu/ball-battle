@@ -30,6 +30,33 @@ function _M.send(node, srv, ...)
     end
 end
 
+
+-- 协议设计：service_name,cmd,args...\r\n
+
+-- @param {string}msgstr
+-- @return {string}service_name, {string}cmd, {table}msg
+function _M.unpack(msgstr)
+	local msg = {}
+
+    while true do
+        local arg, rest = string.match(msgstr, "(.-),(.*)")
+        if arg then
+            msgstr = rest
+            table.insert(msg, arg)
+        else
+            table.insert(msg, msgstr)
+            break
+        end
+    end
+    return msg[1], msg[2], msg
+end
+
+-- @param {table} msg
+function _M.pack(msg)
+	return table.concat(msg, ",") .. "\r\n"
+end
+
+
 function traceback(err)
     skynet.error(tostring(err))
     skynet.error(debug.traceback())
