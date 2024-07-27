@@ -1,3 +1,4 @@
-[submodule "dp/skynet"]
+[submodule "skynet"]
 	path = dp/skynet
 	url = https://github.com/cloudwu/skynet.git
+	branch = master
