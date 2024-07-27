@@ -10,8 +10,10 @@ local _M = {
     --回调函数
     exit = nil,
     init = nil,
-    --分发方法
-    commonds = {},
+    -- lua 消息处理
+    lua_commonds = {},
+	-- 客户端响应
+	client_commands = {},
 }
 
 function _M.call(node, srv, ...)
@@ -77,14 +79,32 @@ function traceback(err)
     skynet.error(debug.traceback())
 end
 
-local dispatch = function(session, address, cmd, ...)
-    local fun = _M.commonds[cmd]
+
+local function client_dispatch(session, address, cmd, fd, ...)
+	local fun = _M.client_commands[cmd]
+	if not fun then
+		skynet.error()
+        return
+    end
+
+	local isok, resp = xpcall(fun, traceback, ...)
+	if not resp then
+        return
+    end
+
+	local msg = string.format("%s, %d, %s/r/n", self.type, isok and 0 or 1, table.unpack(resp, ","))
+	socket.write(fd, msg)
+end
+
+
+local lua_dispatch = function(session, address, cmd, ...)
+    local fun = _M.lua_commonds[cmd]
     if not fun then
         skynet.ret()
         return
     end
     
-    local ret = table.pack(xpcall(fun, traceback, address, ...))
+    local ret = table.pack(xpcall(fun, traceback, ...))
     local isok = ret[1]
     
     if not isok then
@@ -97,7 +117,8 @@ end
 
 
 function init()
-    skynet.dispatch("lua", dispatch)
+    skynet.dispatch("lua", lua_dispatch)
+	skynet.dispatch("clinet", client_dispatch)
     if _M.init then
         _M.init()
     end
