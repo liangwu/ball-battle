@@ -1,10 +1,12 @@
 local skynet = require "skynet"
+local socket = require "skynet.socket"
 local cluster = require "skynet.cluster"
 
 local _M = {
     --类型和id
     name = "",
     id = 0,
+	type = nil,		--[login, gateway, agentmgr...]
     --回调函数
     exit = nil,
     init = nil,
@@ -28,6 +30,19 @@ function _M.send(node, srv, ...)
     else
         return cluster.send(node, srv, ...)
     end
+end
+
+function _M:respClient(fd, ok, msg)
+	local msgT = type(msg)
+	if msgT == "string" then
+		socket.write(fd, string.format("%s, %d, %s/r/n", self.type, ok and 0 or 1, msg));
+		return true
+	elseif msgT == "table" then
+		socket.write(fd, string.format("%s, %d, %s", self.type, ok and 0 or 1, _M.pack(msg)));
+		return true
+	end
+	
+	return false
 end
 
 
