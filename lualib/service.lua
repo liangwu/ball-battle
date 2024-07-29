@@ -1,12 +1,13 @@
 local skynet = require "skynet"
 local socket = require "skynet.socket"
 local cluster = require "skynet.cluster"
+local manager = require "skynet.manager"
 
 local _M = {
     -- 类型和id
     name = "",
     id = 0,
-    type = nil, -- [login, gateway, agentmgr...]
+    type = "", -- [login, gateway, agentmgr...]
     -- 回调函数
     exit = nil,
     init = nil,
@@ -135,15 +136,16 @@ function init()
         -- @param {table}msg
         pack = function(cmd, fd, msg)
             assert(type(msg) == "table")
-            return cmd .. "|", tostring(fd) .. "|" .. table.concat(msg, ",")
+            return cmd .. "|" .. tostring(fd) .. "|" .. table.concat(msg, ",")
         end,
         unpack = function(msg, size)
             local str = skynet.tostring(msg, size)
+			-- skynet.error("client_commands: " .. str)
             local _first = string.find(str, "|", 1, true)
-            local _second = string.find(str, "|", _first + 1, true)
+            local _second = assert(string.find(str, "|", _first + 1, true))
             local fd = tonumber(string.sub(str, 1, _first - 1))
             local cmd = string.sub(str, _first + 1, _second - 1)
-            return cmd, fd, string2table(string.sub(str, _ss + 1))
+            return cmd, fd, string2table(string.sub(str, _second + 1))
         end,
         dispatch = client_dispatch
     }
@@ -152,9 +154,12 @@ function init()
     end
 end
 
-function _M.start(name, id, ...)
-    _M.name = name
+function _M.start(type, id, ...)
+    _M.type = type
     _M.id = tonumber(id)
+	_M.name = type .. id
+	skynet.error("[start]" .. _M.name)
+	manager.name(_M.name, skynet.self())
     skynet.start(init)
 end
 

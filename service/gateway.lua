@@ -147,7 +147,6 @@ end
 
 
 function service.init()
-    skynet.error("[start]" .. service.name .. service.id)
     local node = skynet.getenv("node")
     local nodecfg = runconfig[node]
     local port = nodecfg.gateway[service.id].port

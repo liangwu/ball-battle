@@ -13,7 +13,7 @@ local name, id = ...
 		[4] = password
 	}
  --]]
-function service.commonds.login(fd, msg)
+function service.client_commands.login(fd, msg)
 	if not fd then
 		skynet.error("fd is nil")
 		return false
