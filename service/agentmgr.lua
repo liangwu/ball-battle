@@ -23,6 +23,7 @@ function players:createplayer(playerid)
 
 	local player = {
         playerid = 0,
+		password = nil,
         node = nil,
         agent = nil,
         status = nil,
@@ -56,6 +57,17 @@ end
 
 
 
-function service.commonds.login(msg)
-	
+function service.lua_commonds.login(msg)
+	local playerid = msg[1]
+	local password = msg[2]
+	local player = players:getplayer(playerid)
+	if not player then
+		skynet.retpack(false)
+	end
+
+	if player.password ~= password then
+		skynet.retpack(false)
+	end
+
+	skynet.retpack(true)
 end
